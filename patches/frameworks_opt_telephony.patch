@@ -261,66 +261,36 @@ index 2979a76..87e43a4 100644
          if (!TextUtils.isEmpty(line1Number) && !line1Number.equals(number)) {
 
 
-From 97acdf3a9e8fc1c66e8e242660dd9936d2995ea7 Mon Sep 17 00:00:00 2001
-From: =?UTF-8?q?Vojt=C4=9Bch=20Hejsek?= <hejsekvojtech@gmail.com>
-Date: Tue, 30 May 2017 19:07:38 +0200
-Subject: [PATCH] 2G/3G switch fix for MediaTek
+From 880b07f5abc0957d8de9839416ce99375e9b1187 Mon Sep 17 00:00:00 2001
+From: LineageOS-MTK <luzejij@binka.me>
+Date: Mon, 22 May 2017 23:10:22 +0300
+Subject: [PATCH] Fix 2g/3g switch
 
 ---
- .../com/android/internal/telephony/PhoneBase.java  | 40 ++++++++++++++--------
- 1 file changed, 25 insertions(+), 15 deletions(-)
+ src/java/com/android/internal/telephony/PhoneBase.java | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/src/java/com/android/internal/telephony/PhoneBase.java b/src/java/com/android/internal/telephony/PhoneBase.java
-index dc790d798..5f258bb86 100644
+index dc790d798..07b36c362 100644
 --- a/src/java/com/android/internal/telephony/PhoneBase.java
 +++ b/src/java/com/android/internal/telephony/PhoneBase.java
-@@ -1750,24 +1750,34 @@ public void setPreferredNetworkType(int networkType, Message response) {
+@@ -1750,7 +1750,7 @@ public void setPreferredNetworkType(int networkType, Message response) {
          // Only set preferred network types to that which the modem supports
          int modemRaf = getRadioAccessFamily();
          int rafFromType = RadioAccessFamily.getRafFromNetworkType(networkType);
-+        int filteredType = 0;
- 
--        if (modemRaf == RadioAccessFamily.RAF_UNKNOWN
--                || rafFromType == RadioAccessFamily.RAF_UNKNOWN) {
--            Rlog.d(LOG_TAG, "setPreferredNetworkType: Abort, unknown RAF: "
--                    + modemRaf + " " + rafFromType);
--            if (response != null) {
--                CommandException ex;
 -
--                ex = new CommandException(CommandException.Error.GENERIC_FAILURE);
--                AsyncResult.forMessage(response, null, ex);
--                response.sendToTarget();
--            }
--            return;
-+        switch (rafFromType) {
-+        case 101902:
-+                filteredType = RILConstants.NETWORK_MODE_WCDMA_PREF;
-+                break;
-+        case 65542:
-+                filteredType = RILConstants.NETWORK_MODE_GSM_ONLY;
-+                break;
-+        case 36360:
-+                filteredType = RILConstants.NETWORK_MODE_WCDMA_ONLY;
-+                break;
-+        default:
-+                if ((modemRaf == RadioAccessFamily.RAF_UNKNOWN
-+                        || rafFromType == RadioAccessFamily.RAF_UNKNOWN)) {
-+                        Rlog.d(LOG_TAG, "setPreferredNetworkType: Abort, unknown RAF: " +
-+                         modemRaf + " " + rafFromType);
-+                        if (response != null) {
-+                            CommandException ex;
-+
-+                                ex = new CommandException(CommandException.Error.GENERIC_FAILURE);
-+                                AsyncResult.forMessage(response, null, ex);
-+                                response.sendToTarget();
-+                        }
-+                        return;
-+                }
++/*
+         if (modemRaf == RadioAccessFamily.RAF_UNKNOWN
+                 || rafFromType == RadioAccessFamily.RAF_UNKNOWN) {
+             Rlog.d(LOG_TAG, "setPreferredNetworkType: Abort, unknown RAF: "
+@@ -1764,8 +1764,8 @@ public void setPreferredNetworkType(int networkType, Message response) {
+             }
+             return;
          }
- 
--        int filteredRaf = (rafFromType & modemRaf);
--        int filteredType = RadioAccessFamily.getNetworkTypeFromRaf(filteredRaf);
 -
+-        int filteredRaf = (rafFromType & modemRaf);
++*/
++        int filteredRaf = (rafFromType);
+         int filteredType = RadioAccessFamily.getNetworkTypeFromRaf(filteredRaf);
+ 
          // The getNetworkTypeFromRaf, has no way to differentiate between MODE_GSM_UMTS
-         // and MODE_WCDMA_PREF since they have the same raf. So check for it explicitly
-         if (networkType == RILConstants.NETWORK_MODE_GSM_UMTS &&
